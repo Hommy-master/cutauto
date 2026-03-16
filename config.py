@@ -21,7 +21,7 @@ DOWNLOAD_URL = os.getenv("DOWNLOAD_URL", "https://capcut-mate.jcaigc.cn/")
 TIP_URL = os.getenv("TIP_URL", "https://docs.jcaigc.cn/")
 
 # 模板目录路径
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "template")
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "tpls")
 
 # 文件下载大小限制（字节），默认200MB
 DOWNLOAD_FILE_SIZE_LIMIT = int(os.getenv("DOWNLOAD_FILE_SIZE_LIMIT", str(200 * 1024 * 1024)))

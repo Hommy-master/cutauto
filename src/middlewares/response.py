@@ -127,7 +127,11 @@ class ResponseMiddleware(BaseHTTPMiddleware):
             
             # 如果响应已经有统一格式（dict类型且包含code和message），直接返回
             if isinstance(data, dict) and 'code' in data and 'message' in data:
-                return response
+                # 重新创建JSONResponse，因为原始response的body_iterator已被消费
+                return JSONResponse(
+                    status_code=response.status_code,
+                    content=data
+                )
             
             # 如果响应是列表类型，包装到data字段中
             if isinstance(data, list):

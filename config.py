@@ -20,6 +20,9 @@ DOWNLOAD_URL = os.getenv("DOWNLOAD_URL", "https://capcut-mate.jcaigc.cn/")
 # 草稿提示URL
 TIP_URL = os.getenv("TIP_URL", "https://docs.jcaigc.cn/")
 
+# 草稿基础URL（用于构建草稿访问链接）
+DRAFT_BASE_URL = os.getenv("DRAFT_BASE_URL", "https://capcut-mate.jcaigc.cn/openapi/capcut-mate/v1/draft")
+
 # 模板目录路径
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "tpls")
 

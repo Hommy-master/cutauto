@@ -107,9 +107,17 @@ class BaseProcessor(ABC):
             draft_info_path = os.path.join(self.draft_path, "draft_info.json")
             draft_content_path = os.path.join(self.draft_path, "draft_content.json")
             
-            # 检查必要的文件是否存在
+            # 检查 draft_info.json 是否存在，如果不存在则使用 draft_content.json
             if not os.path.exists(draft_info_path):
-                logger.warning(f"draft_info.json 不存在: {draft_info_path}")
+                logger.warning(f"draft_info.json 不存在，尝试使用 draft_content.json")
+                if os.path.exists(draft_content_path):
+                    draft_info_path = draft_content_path
+                else:
+                    logger.error(f"draft_content.json 也不存在: {draft_content_path}")
+                    raise CustomException(
+                        ErrorCode.TEMPLATE_COPY_ERROR,
+                        detail=f"模板文件缺失: draft_info.json 和 draft_content.json 都不存在"
+                    )
             
             # 5. 加载模板草稿
             script = draft.ScriptFile.load_template(draft_info_path)

@@ -1,93 +1,55 @@
 """
 模板 688001 请求参数模块
 
-该模板适用于：多视频混剪 + 背景音乐 + 标题文字
+该模板适用于：图片轮播 + 背景音乐
+支持替换3张图片和背景音乐
 """
 
-from typing import List, Optional, Literal
-from pydantic import BaseModel, Field, field_validator
-
-from src.schemas.template_base import VideoMaterial, AudioMaterial, TextMaterial
+from typing import Optional, Literal
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class CreateDraftRequest688001(BaseModel):
     """
     模板 688001 请求参数
     
-    该模板适用于：多视频混剪 + 背景音乐 + 标题文字
-    支持替换主视频、背景音乐和标题文字
+    该模板适用于：图片轮播 + 背景音乐
+    支持替换3张图片(image1, image2, image3)和背景音乐(bgm)
     """
     template_id: Literal["688001"] = Field("688001", description="模板ID，固定为688001")
     
-    # 视频素材列表（至少1个，最多10个）
-    videos: List[VideoMaterial] = Field(
+    # 第一张图片（必填）
+    image1: HttpUrl = Field(
         ...,
-        min_items=1,
-        max_items=10,
-        description="视频素材列表，至少1个，最多10个"
+        description="第一张图片URL，将替换 9E7AD15B-64B9-40bc-9076-4D555646EFA6.png"
     )
     
-    # 背景音乐（可选）
-    audio: Optional[AudioMaterial] = Field(
+    # 第二张图片（必填）
+    image2: HttpUrl = Field(
+        ...,
+        description="第二张图片URL，将替换 AA3EAE10-F30D-4cda-A374-63FA372DA22B.png"
+    )
+    
+    # 第三张图片（必填）
+    image3: HttpUrl = Field(
+        ...,
+        description="第三张图片URL，将替换 F70BB297-6368-432e-983F-378A2C0A38AE.png"
+    )
+    
+    # 背景音乐（可选，不传则使用默认）
+    bgm: Optional[HttpUrl] = Field(
         None,
-        description="背景音乐素材，不传则使用模板默认音乐"
+        description="背景音乐URL，将替换 1f48eb595f2664f2fa973975e4767f1d.mp3"
     )
-    
-    # 标题文字（可选）
-    title: Optional[TextMaterial] = Field(
-        None,
-        description="标题文字，不传则使用模板默认标题"
-    )
-    
-    # 转场效果
-    transition_type: Optional[str] = Field(
-        "fade",
-        description="转场效果类型：fade（淡入淡出）、slide（滑动）、zoom（缩放）"
-    )
-    
-    # 输出配置
-    output_duration: Optional[float] = Field(
-        None,
-        gt=0,
-        le=600,
-        description="输出视频总时长（秒），不传则自动计算"
-    )
-    
-    @field_validator('transition_type')
-    def validate_transition_type(cls, v):
-        """校验转场类型是否合法"""
-        allowed_transitions = ['fade', 'slide', 'zoom', 'none']
-        if v and v not in allowed_transitions:
-            raise ValueError(f"转场类型必须是以下之一：{', '.join(allowed_transitions)}")
-        return v
     
     model_config = {
         "json_schema_extra": {
             "example": {
                 "template_id": "688001",
-                "videos": [
-                    {
-                        "url": "https://example.com/video1.mp4",
-                        "material_name": "视频1",
-                        "duration": 10
-                    },
-                    {
-                        "url": "https://example.com/video2.mp4",
-                        "material_name": "视频2",
-                        "duration": 8
-                    }
-                ],
-                "audio": {
-                    "url": "https://example.com/music.mp3",
-                    "volume": 0.6
-                },
-                "title": {
-                    "content": "精彩视频混剪",
-                    "font_size": 50,
-                    "color": "#FFD700",
-                    "position_y": 0.1
-                },
-                "transition_type": "fade"
+                "image1": "https://example.com/image1.jpg",
+                "image2": "https://example.com/image2.png",
+                "image3": "https://example.com/image3.jpg",
+                "bgm": "https://example.com/music.mp3"
             }
         }
     }

@@ -1,10 +1,15 @@
 """
 模板 688001 处理器模块
 
-该模板适用于：多视频混剪 + 背景音乐 + 标题文字
+该模板适用于：图片轮播 + 背景音乐
+支持替换3张图片和背景音乐
 """
 
-from typing import Any, Dict, List
+import os
+import json
+import shutil
+from typing import Any, Dict, Tuple
+from urllib.parse import urlparse
 
 from src.service.template_base import BaseProcessor
 from src.schemas.template_688001 import CreateDraftRequest688001
@@ -16,12 +21,19 @@ class Processor688001(BaseProcessor):
     """
     模板 688001 处理器
     
-    处理多视频混剪场景，支持：
-    - 最多10个视频素材
-    - 背景音乐替换
-    - 标题文字自定义
-    - 转场效果选择
+    处理图片轮播场景，支持：
+    - 替换3张图片（image1, image2, image3）
+    - 替换背景音乐（bgm）
+    - 自动处理文件格式转换
     """
+    
+    # 模板中的目标文件名映射
+    TARGET_FILES = {
+        "image1": "9E7AD15B-64B9-40bc-9076-4D555646EFA6.png",
+        "image2": "AA3EAE10-F30D-4cda-A374-63FA372DA22B.png",
+        "image3": "F70BB297-6368-432e-983F-378A2C0A38AE.png",
+        "bgm": "1f48eb595f2664f2fa973975e4767f1d.mp3"
+    }
     
     def __init__(self):
         super().__init__("688001")
@@ -36,38 +48,33 @@ class Processor688001(BaseProcessor):
         Returns:
             处理结果字典
         """
-        logger.info(f"开始处理 688001 模板，视频数量: {len(params.videos)}")
+        logger.info(f"开始处理 688001 模板")
         
         try:
             # 1. 复制模板到草稿目录
             self._copy_template()
             
-            # 2. 下载视频素材
-            video_paths = self._download_videos(params.videos)
+            # 2. 下载并替换图片文件
+            image_replacements = {}
+            for img_key in ["image1", "image2", "image3"]:
+                url = getattr(params, img_key)
+                target_filename = self.TARGET_FILES[img_key]
+                actual_filename = self._download_and_replace_image(url, target_filename)
+                image_replacements[target_filename] = actual_filename
             
-            # 3. 下载音频（如果有）
-            audio_path = None
-            if params.audio:
-                audio_path = self._download_material(str(params.audio.url))
+            # 3. 下载并替换背景音乐（如果提供）
+            audio_replacement = None
+            if params.bgm:
+                audio_replacement = self._download_and_replace_audio(
+                    params.bgm, 
+                    self.TARGET_FILES["bgm"]
+                )
             
-            # 4. 处理标题文字
-            title_config = None
-            if params.title:
-                title_config = self._process_title(params.title)
+            # 4. 更新 draft_content.json 中的路径
+            self._update_draft_content(image_replacements, audio_replacement)
             
-            # 5. 计算预估时长
-            estimated_duration = self._calculate_video_duration(params)
-            
-            # 6. 生成草稿内容
-            self._generate_draft_content(
-                videos=video_paths,
-                audio=audio_path,
-                title=title_config,
-                transition_type=params.transition_type or "fade"
-            )
-            
-            # 7. 构建响应
-            result = self._build_response(estimated_duration)
+            # 5. 构建响应
+            result = self._build_response(estimated_duration=30.0)
             
             logger.info(f"688001 模板处理完成: {result['draft_id']}")
             return result
@@ -83,75 +90,120 @@ class Processor688001(BaseProcessor):
         finally:
             self.cleanup()
     
-    def _download_videos(self, videos: List[Any]) -> List[str]:
+    def _download_and_replace_image(self, url: str, target_filename: str) -> str:
         """
-        下载所有视频素材
+        下载图片并替换模板中的文件
         
         Args:
-            videos: 视频素材列表
+            url: 图片URL
+            target_filename: 目标文件名（模板中的原始文件名）
             
         Returns:
-            本地文件路径列表
+            实际使用的文件名（可能因格式转换而不同）
         """
-        paths = []
-        for i, video in enumerate(videos):
-            logger.info(f"下载视频 {i+1}/{len(videos)}: {video.url}")
-            local_path = self._download_material(str(video.url))
-            paths.append(local_path)
-        return paths
+        logger.info(f"下载图片: {url} -> {target_filename}")
+        
+        # 下载文件
+        downloaded_path = self._download_material(url)
+        
+        # 获取下载文件的扩展名
+        downloaded_ext = os.path.splitext(downloaded_path)[1].lower()
+        target_ext = os.path.splitext(target_filename)[1].lower()
+        
+        # 确定实际使用的文件名
+        if downloaded_ext != target_ext:
+            # 格式不同，使用下载文件的格式
+            actual_filename = os.path.splitext(target_filename)[0] + downloaded_ext
+            logger.info(f"图片格式转换: {target_filename} -> {actual_filename}")
+        else:
+            actual_filename = target_filename
+        
+        # 复制到草稿目录的 materials/video 文件夹
+        dest_dir = os.path.join(self.draft_path, "materials", "video")
+        os.makedirs(dest_dir, exist_ok=True)
+        dest_path = os.path.join(dest_dir, actual_filename)
+        
+        shutil.copy2(downloaded_path, dest_path)
+        logger.info(f"图片已复制到: {dest_path}")
+        
+        return actual_filename
     
-    def _process_title(self, title: Any) -> Dict[str, Any]:
+    def _download_and_replace_audio(self, url: str, target_filename: str) -> str:
         """
-        处理标题文字配置
+        下载音频并替换模板中的文件
         
         Args:
-            title: 标题文字配置
+            url: 音频URL
+            target_filename: 目标文件名（模板中的原始文件名）
             
         Returns:
-            处理后的标题配置
+            实际使用的文件名（可能因格式转换而不同）
         """
-        return {
-            "content": title.content,
-            "font_size": title.font_size,
-            "color": title.color,
-            "position_x": title.position_x,
-            "position_y": title.position_y,
-            "start_time": title.start_time,
-            "duration": title.duration
-        }
+        logger.info(f"下载音频: {url} -> {target_filename}")
+        
+        # 下载文件
+        downloaded_path = self._download_material(url)
+        
+        # 获取下载文件的扩展名
+        downloaded_ext = os.path.splitext(downloaded_path)[1].lower()
+        target_ext = os.path.splitext(target_filename)[1].lower()
+        
+        # 确定实际使用的文件名
+        if downloaded_ext != target_ext:
+            # 格式不同，使用下载文件的格式
+            actual_filename = os.path.splitext(target_filename)[0] + downloaded_ext
+            logger.info(f"音频格式转换: {target_filename} -> {actual_filename}")
+        else:
+            actual_filename = target_filename
+        
+        # 复制到草稿目录的 audios 文件夹
+        dest_dir = os.path.join(self.draft_path, "audios")
+        os.makedirs(dest_dir, exist_ok=True)
+        dest_path = os.path.join(dest_dir, actual_filename)
+        
+        shutil.copy2(downloaded_path, dest_path)
+        logger.info(f"音频已复制到: {dest_path}")
+        
+        return actual_filename
     
-    def _calculate_video_duration(self, params: CreateDraftRequest688001) -> float:
+    def _update_draft_content(self, image_replacements: Dict[str, str], audio_replacement: str = None) -> None:
         """
-        计算视频总时长
+        更新 draft_content.json 中的文件路径
         
         Args:
-            params: 模板参数
-            
-        Returns:
-            总时长（秒）
+            image_replacements: 图片文件名映射 {原文件名: 实际文件名}
+            audio_replacement: 音频实际文件名（如果有）
         """
-        total = 0.0
-        for video in params.videos:
-            if video.duration:
-                total += video.duration
-        return total or 30.0  # 默认30秒
-    
-    def _generate_draft_content(
-        self,
-        videos: List[str],
-        audio: str = None,
-        title: Dict[str, Any] = None,
-        transition_type: str = "fade"
-    ) -> None:
-        """
-        生成草稿内容文件
+        draft_content_path = os.path.join(self.draft_path, "draft_content.json")
         
-        Args:
-            videos: 视频文件路径列表
-            audio: 音频文件路径
-            title: 标题配置
-            transition_type: 转场类型
-        """
-        # TODO: 实现草稿内容生成逻辑
-        # 这里应该调用 pyJianYingDraft 相关功能生成 draft_content.json
-        logger.info(f"生成草稿内容: {len(videos)} 个视频, 转场: {transition_type}")
+        if not os.path.exists(draft_content_path):
+            logger.warning(f"draft_content.json 不存在: {draft_content_path}")
+            return
+        
+        # 读取 draft_content.json
+        with open(draft_content_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # 替换图片路径
+        for original_name, actual_name in image_replacements.items():
+            if original_name != actual_name:
+                # 需要替换文件名
+                old_path = f"/materials/video/{original_name}"
+                new_path = f"/materials/video/{actual_name}"
+                content = content.replace(old_path, new_path)
+                logger.info(f"更新图片路径: {old_path} -> {new_path}")
+        
+        # 替换音频路径
+        if audio_replacement:
+            original_audio = self.TARGET_FILES["bgm"]
+            if original_audio != audio_replacement:
+                old_path = f"/audios/{original_audio}"
+                new_path = f"/audios/{audio_replacement}"
+                content = content.replace(old_path, new_path)
+                logger.info(f"更新音频路径: {old_path} -> {new_path}")
+        
+        # 写回文件
+        with open(draft_content_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        logger.info("draft_content.json 已更新")

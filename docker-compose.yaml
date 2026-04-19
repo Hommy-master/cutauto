@@ -1,7 +1,7 @@
 services:
   cutauto:
     image: gogoshine/cutauto:latest
-    #image: gogoshine/cutauto:sha-190a61f
+    container_name: cutauto
     platform: linux/amd64
     ports:
       - "30000:30000"
@@ -14,16 +14,11 @@ services:
       - DRAFT_URL=http://127.0.0.1/openapi/capcut-mate/v1/get_draft
       # 用于将容器内部的文件路径转成URL，本质是将/app/替换成DOWNLOAD_URL得到下载路径
       - DOWNLOAD_URL=http://127.0.0.1/
-    mem_limit: 2G     # 内存限制
-    memswap_limit: 2G # 总内存（物理内存 + Swap）限制
-    cpus: '2'       # CPU使用率限制为150%，即容器最多可以使用1.5个完整的CPU核心
-    oom_score_adj: -500  # 调整 OOM 杀手优先级
     restart: unless-stopped  # 除非手动停止，否则总是重启容器
-    container_name: cutauto # 这里指容器名称，非必需，不指定时，名称为：<项目名称>-<服务名称>-<序号>
-    #entrypoint: ["/bin/sh", "-c", "sleep 10000"]
+
   capcut-mate:
     image: gogoshine/capcut-mate:latest
-    #image: gogoshine/capcut-mate:sha-190a61f
+    container_name: cutauto-capcut-mate
     platform: linux/amd64
     ports:
       - "30001:30000"
@@ -36,20 +31,14 @@ services:
       - DRAFT_URL=http://127.0.0.1/openapi/capcut-mate/v1/get_draft
       # 用于将容器内部的文件路径转成URL，本质是将/app/替换成DOWNLOAD_URL得到下载路径
       - DOWNLOAD_URL=http://127.0.0.1/
-    mem_limit: 2G     # 内存限制
-    memswap_limit: 2G # 总内存（物理内存 + Swap）限制
-    cpus: '2'       # CPU使用率限制为150%，即容器最多可以使用1.5个完整的CPU核心
-    oom_score_adj: -500  # 调整 OOM 杀手优先级
-    restart: unless-stopped  # 除非手动停止，否则总是重启容器
-    container_name: capcut-mate # 这里指容器名称，非必需，不指定时，名称为：<项目名称>-<服务名称>-<序号>
-    #entrypoint: ["/bin/sh", "-c", "sleep 10000"]
+    restart: unless-stopped
+
   nginx:
     image: gogoshine/nginx:latest
+    container_name: cutauto-nginx
     ports:
       - "80:80"
     environment:
-      - LISTEN_PORT=80
-      - SERVER_NAME=localhost
       - PROXY_PASS_URL_1=http://127.0.0.1:30000/openapi/cutauto/
       - PROXY_LOCATION_1=/openapi/cutauto/
       - PROXY_PASS_URL_2=http://127.0.0.1:30001/openapi/capcut-mate/
@@ -57,4 +46,3 @@ services:
     volumes:
       - ./html:/usr/share/nginx/html
     restart: unless-stopped
-    container_name: nginx

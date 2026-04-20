@@ -2,9 +2,9 @@ from collections import OrderedDict
 import src.pyJianYingDraft as draft
 from typing import Dict
 
-# Modify global variable, use OrderedDict to implement LRU cache, limit the maximum number to 10000
+# Modify global variable, use OrderedDict to implement LRU cache, limit the maximum number to 1000
 DRAFT_CACHE: Dict[str, 'draft.ScriptFile'] = OrderedDict()  # Use Dict for type hinting
-MAX_CACHE_SIZE = 10000
+MAX_CACHE_SIZE = 1000
 
 def update_cache(key: str, value: draft.ScriptFile) -> None:
     """Update LRU cache"""
@@ -13,7 +13,7 @@ def update_cache(key: str, value: draft.ScriptFile) -> None:
         DRAFT_CACHE.pop(key)
     elif len(DRAFT_CACHE) >= MAX_CACHE_SIZE:
         print(f"{key}, Cache is full, deleting the least recently used item")
-        # 如果缓存已满，就删除最近最少使用的项（即第一个项）
-        DRAFT_CACHE.popitem()
+        # 缓存满时淘汰队列头部（最先放入 OrderedDict、且未再被更新的项）
+        DRAFT_CACHE.popitem(last=False)
     # 添加到缓存的末尾（最近使用的）
     DRAFT_CACHE[key] = value

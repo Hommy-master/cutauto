@@ -11,11 +11,11 @@
 
 </div>
 
-# 剪映草稿自动化助手
+# 剪映草稿自动化助手（cutauto）
 
 ## 简介
 
-**剪映草稿自动化助手 (CutAuto)** 是一个基于 Python + FastAPI 开发的后端服务，旨在帮助用户快速批量化生成剪映视频草稿。通过加载预定义的剪映模板并替换其中的素材，用户可以在短时间内生成大量专业水准的视频草稿。
+**剪映草稿自动化助手 (cutauto)** 是一个基于 Python + FastAPI 开发的后端服务，旨在帮助用户快速批量化生成剪映视频草稿。通过加载预定义的剪映模板并替换其中的素材，用户可以在短时间内生成大量专业水准的视频草稿。
 
 ## 功能特性
 
@@ -43,7 +43,7 @@
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd CutAuto
+cd cutauto
 
 # 使用 Docker Compose 启动
 docker-compose up -d
@@ -98,7 +98,7 @@ POST /openapi/cutauto/v1/mashup688001
 ## 项目结构
 
 ```
-CutAuto/
+cutauto/
 ├── src/
 │   ├── pyJianYingDraft/    # 剪映草稿核心库
 │   │   ├── script_file.py   # 草稿文件操作
@@ -144,6 +144,6 @@ CutAuto/
 
 <div align="center">
 
-**Made with ❤️ for CapCut Automation**
+**Made with ❤️ · cutauto**
 
 </div>

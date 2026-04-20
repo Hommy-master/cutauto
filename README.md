@@ -11,11 +11,11 @@
 
 </div>
 
-# CutAuto - CapCut Draft Automation Assistant
+# cutauto - CapCut Draft Automation Assistant
 
 ## Introduction
 
-**CutAuto (CapCut Draft Automation Assistant)** is a backend service built with Python + FastAPI, designed to help users quickly generate CapCut video drafts in batches. By loading predefined CapCut templates and replacing the materials within, users can generate a large number of professional-quality video drafts in a short time.
+**cutauto (CapCut Draft Automation Assistant)** is a backend service built with Python + FastAPI, designed to help users quickly generate CapCut video drafts in batches. By loading predefined CapCut templates and replacing the materials within, users can generate a large number of professional-quality video drafts in a short time.
 
 ## Features
 
@@ -43,7 +43,7 @@
 ```bash
 # Clone the project
 git clone <repository-url>
-cd CutAuto
+cd cutauto
 
 # Start with Docker Compose
 docker-compose up -d
@@ -98,7 +98,7 @@ Quickly create a draft using the 688001 template.
 ## Project Structure
 
 ```
-CutAuto/
+cutauto/
 ├── src/
 │   ├── pyJianYingDraft/    # CapCut Draft Core Library
 │   │   ├── script_file.py   # Draft file operations
@@ -144,6 +144,6 @@ This project is open-sourced under the [MIT License](LICENSE).
 
 <div align="center">
 
-**Made with ❤️ for CapCut Automation**
+**Made with ❤️ · cutauto**
 
 </div>

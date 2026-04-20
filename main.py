@@ -6,7 +6,7 @@ from src.middlewares import PrepareMiddleware, ResponseMiddleware
 
 # 1. 创建 FastAPI 应用
 app: FastAPI = FastAPI(
-    title="CutAuto API",
+    title="cutauto API",
     version="1.0",
     description="剪映草稿自动化助手 API - 支持模板化批量生成视频草稿",
     docs_url="/docs",
@@ -31,7 +31,7 @@ for r in app.routes:
     name = getattr(r, "name", "<unnamed>")
     logger.info("Route: %s %s -> %s", ",".join(sorted(methods)), path, name)
 
-logger.info("CutAuto API")
+logger.info("cutauto API")
 
 # 5. 启动
 if __name__ == "__main__":

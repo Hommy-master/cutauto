@@ -1,7 +1,7 @@
 [project]
 name = "cutauto"
 version = "1.0.0"
-description = "CutAuto API Service"
+description = "cutauto API Service"
 authors = [
     { name = "Hommy", email = "taohongmin51@gmail.com" }
 ]
